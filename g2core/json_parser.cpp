@@ -85,21 +85,20 @@ static stat_t _get_nv_pair(nvObj_t *nv, char **pstr, int8_t *depth);
  *    _json_parser_execute() executes sets and gets in an application agnostic way. It should work for other apps than g2core
  */
 
-void json_parser(char *str)
+stat_t json_parser(char *str, bool suppress_response) // suppress_response defaults to false, see decalaration in .h
 {
     nvObj_t *nv = nv_reset_nv_list();               // get a fresh nvObj list
     stat_t status = _json_parser_kernal(nv, str);
-    if (status == STAT_OK) {
-        // execute the command
+    if (status == STAT_OK) {                        // execute the command
         nv = nv_body;
         status = _json_parser_execute(nv);
     }
-    if (status == STAT_COMPLETE) {                  // skip the print if returning from something that already did it.
-        return;
+    if (suppress_response || (status == STAT_COMPLETE)) {  // skip the print if returning from something that already did it.
+        return status;
     }
     nv_print_list(status, TEXT_NO_PRINT, JSON_RESPONSE_FORMAT);
-
     sr_request_status_report(SR_REQUEST_TIMED);     // generate incremental status report to show any changes
+    return STAT_OK;
 }
 
 // This is almost the same as json_parser, except it doesn't *always* execute the parsed out list, and it never returns a reponse
@@ -499,7 +498,9 @@ void json_print_list(stat_t status, uint8_t flags)
     switch (flags) {
         case JSON_NO_PRINT: break;
         case JSON_OBJECT_FORMAT: { json_print_object(nv_body); break; }
-        case JSON_RESPONSE_FORMAT: { json_print_response(status); break; }
+        case JSON_RESPONSE_FORMAT:
+        case JSON_RESPONSE_TO_MUTED_FORMAT:
+            { json_print_response(status, flags == JSON_RESPONSE_TO_MUTED_FORMAT); break; }
     }
 }
 
@@ -522,9 +523,9 @@ void json_print_list(stat_t status, uint8_t flags)
  *  on all the (non-silent) responses.
  */
 
-void json_print_response(uint8_t status)
+void json_print_response(uint8_t status, const bool only_to_muted /*= false*/)
 {
-    if (js.json_verbosity == JV_SILENT) {                   // silent means no responses
+    if ((js.json_verbosity == JV_SILENT) || (cs.responses_suppressed)) {                   // silent means no responses
         return;
     }
     if (js.json_verbosity == JV_EXCEPTIONS)    {            // cutout for JV_EXCEPTIONS mode
@@ -566,10 +567,13 @@ void json_print_response(uint8_t status)
                     nv->valuetype = TYPE_EMPTY;
                 }
             }
-        } while ((nv = nv->nx) != NULL);
+        } while ((nv = nv->nx) != NULL);                    // Emergency escape
     }
 
-    // Footer processing
+    // Footer processing - wind to the end of the populated blocks
+    if (nv == NULL) {                                       // this can happen when processing a stale list
+        return;                                             //...that already has a null-terminated footer
+    }
     while(nv->valuetype != TYPE_EMPTY) {                    // find a free nvObj at end of the list...
         if ((nv = nv->nx) == NULL) {                        // oops! No free nvObj!
             rpt_exception(STAT_JSON_OUTPUT_TOO_LONG, "json_print_response() json too long"); // report this as an exception
@@ -599,7 +603,7 @@ void json_print_response(uint8_t status)
 
     // serialize the JSON response and print it if there were no errors
     if (json_serialize(nv_header, cs.out_buf, sizeof(cs.out_buf)) >= 0) {
-        xio_writeline(cs.out_buf);
+        xio_writeline(cs.out_buf, only_to_muted);
     }
 }
 
@@ -614,7 +618,10 @@ void json_print_response(uint8_t status)
 
 stat_t json_set_jv(nvObj_t *nv)
 {
-    if ((uint8_t)nv->value >= JV_MAX_VALUE) { return (STAT_INPUT_EXCEEDS_MAX_VALUE);}
+    if ((uint8_t)nv->value >= JV_MAX_VALUE) { 
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+    }    
     js.json_verbosity = (jsonVerbosity)nv->value;
 
     js.echo_json_footer = false;
@@ -643,9 +650,13 @@ stat_t json_set_jv(nvObj_t *nv)
 
 stat_t json_set_ej(nvObj_t *nv)
 {
-    if ((nv->value < TEXT_MODE) || (nv->value > AUTO_MODE)) {
+    if (nv->value < TEXT_MODE) {
         nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_VALUE_RANGE_ERROR);
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
+    if (nv->value > AUTO_MODE) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
     
     // set json_mode to 0 or 1, but don't change it if comm_mode == 2

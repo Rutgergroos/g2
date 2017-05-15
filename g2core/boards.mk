@@ -39,7 +39,8 @@ ifeq ("$(CONFIG)","Othermill")
     ifeq ("$(BOARD)","NONE")
         BOARD=g2v9k
     endif
-    SETTINGS_FILE="settings_othermill.h"
+#    SETTINGS_FILE="settings_othermill.h"
+    SETTINGS_FILE="settings_othermill_test.h"
 endif
 
 ifeq ("$(CONFIG)","ProbotixV90")
@@ -72,7 +73,7 @@ endif
 
 ifeq ("$(CONFIG)","TestQuintic")
     ifeq ("$(BOARD)","NONE")
-        BOARD=gquintic-a
+        BOARD=gquintic-b
     endif
     SETTINGS_FILE="settings_test.h"
 endif
@@ -80,11 +81,10 @@ endif
 
 ifeq ("$(CONFIG)","TestQuadratic")
     ifeq ("$(BOARD)","NONE")
-        BOARD=gquadratic-a
+        BOARD=gquadratic-b
     endif
     SETTINGS_FILE="settings_test.h"
 endif
-
 
 ##########
 # Shopbot configs:
@@ -125,7 +125,7 @@ ifeq ("$(CONFIG)","PrintrbotPlay")
     ifeq ("$(BOARD)","NONE")
         BOARD=printrboardG2v3
     endif
-    SETTINGS_FILE="settings_printrbot_play.h"
+    SETTINGS_FILE="settings_Printrbot_Play.h"
 endif
 
 ##########
@@ -137,6 +137,24 @@ ifeq ("$(CONFIG)","Ultimakerv9k")
     endif
     SETTINGS_FILE="settings_ultimaker.h"
 endif
+
+##########
+# EMSL configs:
+
+ifeq ("$(CONFIG)","WaterColorBotv2")
+    ifeq ("$(BOARD)","NONE")
+        BOARD=gquadratic-b
+    endif
+    SETTINGS_FILE="settings_watercolorbot_v2.h"
+endif
+
+ifeq ("$(CONFIG)","EggBot")
+    ifeq ("$(BOARD)","NONE")
+        BOARD=gquadratic-b
+    endif
+    SETTINGS_FILE="settings_eggbot.h"
+endif
+
 
 include $(wildcard ./board/$(STAR).mk)
 

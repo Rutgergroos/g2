@@ -44,7 +44,7 @@
  *  functions. Data from the Gcode model is transferred to the motion planner by the mp_xxxx()
  *  functions called by the canonical machine.
  *
- *  The planner should only use data in the planner model. When a move (block) is ready for
+ *  The planner should only use data in the planner model. When a move (buffer) is ready for
  *  execution the relevant data from the planner is transferred to the runtime model,
  *  which should also be isolated.
  *
@@ -72,7 +72,7 @@ mpMotionRuntimeSingleton_t mr;      // context for block runtime
 #define JSON_COMMAND_BUFFER_SIZE 3
 
 struct json_command_buffer_t {
-    char buf[RX_BUFFER_MIN_SIZE];
+    char buf[RX_BUFFER_SIZE];
     json_command_buffer_t *pv;
     json_command_buffer_t *nx;
 };
@@ -172,6 +172,14 @@ stat_t planner_test_assertions()
         (BAD_MAGIC(mr.magic_start)) || (BAD_MAGIC(mr.magic_end))) {
         return(cm_panic(STAT_PLANNER_ASSERTION_FAILURE, "planner_test_assertions()"));
     }
+//    for (uint8_t i=0; i < PLANNER_BUFFER_POOL_SIZE; i++) {
+//        if (mb.bf[i].nx == nullptr) {
+//            _debug_trap("buffer has nullptr for nx");
+//        }
+//        if (mb.bf[i].pv == nullptr) {
+//            _debug_trap("buffer has nullptr for pv");
+//        }
+//    }
     return (STAT_OK);
 }
 
@@ -303,7 +311,7 @@ stat_t mp_runtime_command(mpBuf_t *bf)
 
 /*************************************************************************
  * mp_json_command()    - queue a json command
- * _exec_json_command() - execute json string
+ * _exec_json_command() - execute json string (from exec system)
  */
 
 stat_t mp_json_command(char *json_string)
@@ -326,6 +334,14 @@ static void _exec_json_command(float *value, bool *flag)
     jc.free_buffer();
 }
 
+/*************************************************************************
+ * mp_json_command_immediate()    - execute a json command with response suppressed
+ */
+
+stat_t mp_json_command_immediate(char *json_string)
+{
+    return json_parser(json_string);
+}
 
 /*************************************************************************
  * mp_json_wait()    - queue a json wait command
@@ -462,8 +478,8 @@ bool mp_is_phat_city_time()
  *  mp_planner_callback()'s job is to invoke backward planning intelligently.
  *  The flow of control and division of responsibilities for planning is:
  *
- *  - mp_aline() receives new Gcode blocks and initializes the local variables
- *    for the new block.
+ *  - mp_aline() receives new Gcode moves and initializes the local variables
+ *    for the new buffer.
  *
  *  - mp_planner_callback() is called regularly from the main loop.
  *    It's job is to determine whether or not to call mp_plan_block_list(),
@@ -472,9 +488,9 @@ bool mp_is_phat_city_time()
  *    mp_planner_callback() also manages planner state - whether the planner
  *    is IDLE, in STARTUP or in one of the running states.
  *
- *  - _plan_block_list() / _planblock() is the backward planning function.
+ *  - _plan_block() is the backward planning function for a single buffer.
  *
- *  - Forward planning is just-in-time by the execution runtime
+ *  - Just-in-time forward planning is performed by mp_plan_move() in the plan_exec.cpp runtime executive
  *
  *  Some Items to note:
  *
@@ -534,12 +550,9 @@ void mp_replan_queue(mpBuf_t *bf)
 {
     do {
         if (bf->buffer_state >= MP_BUFFER_PLANNED) {
-            // revert from PLANNED state
-            bf->buffer_state = MP_BUFFER_PREPPED;
-        } else {
-            // If it's not "planned" then it's either PREPPED or earlier.
-            // We don't need to adjust it.
-            break;
+            bf->buffer_state = MP_BUFFER_PREPPED;            // revert from PLANNED state
+        } else {        // If it's not "planned" then it's either PREPPED or earlier.
+            break;      // We don't need to adjust it.
         }
     } while ((bf = mp_get_next_buffer(bf)) != mb.r);
 
@@ -590,6 +603,16 @@ void mp_start_feed_override(const float ramp_time, const float override_factor)
 void mp_end_feed_override(const float ramp_time)
 {
     mp_start_feed_override (FEED_OVERRIDE_RAMP_TIME, 1.00);
+}
+
+void mp_start_traverse_override(const float ramp_time, const float override_factor)
+{
+    return;
+}
+
+void mp_end_traverse_override(const float ramp_time)
+{
+    return;
 }
 
 /*
@@ -697,25 +720,26 @@ static inline void _clear_buffer(mpBuf_t *bf)
     // the pointers and buffer number during interrupts
 
     // We'll have to figure something else out for C, sorry.
-    bf->clear();
+    bf->reset();
 }
 
 void mp_init_buffers(void)
 {
     mpBuf_t *pv, *nx;
-    uint8_t i, nx_i;
 
-    memset(&mb, 0, sizeof(mb));                     // clear all values, pointers and status
+    //memset(&mb, 0, sizeof(mb));                     // clear all values, pointers and status
     mb.magic_start = MAGICNUM;
     mb.magic_end = MAGICNUM;
 
     mb.w = &mb.bf[0];                               // init all buffer pointers
     mb.r = &mb.bf[0];
     pv = &mb.bf[PLANNER_BUFFER_POOL_SIZE-1];
-    for (i=0; i < PLANNER_BUFFER_POOL_SIZE; i++) {
+    for (uint8_t i=0; i < PLANNER_BUFFER_POOL_SIZE; i++) {
+        _clear_buffer(&mb.bf[i]);
+        uint8_t nx_i = ((i<(PLANNER_BUFFER_POOL_SIZE-1))?(i+1):0); // buffer incr & wrap
+
         mb.bf[i].buffer_number = i;                 //+++++ number it for diagnostics only (otherwise not used)
 
-        nx_i = ((i<PLANNER_BUFFER_POOL_SIZE-1)?(i+1):0); // buffer incr & wrap
         nx = &mb.bf[nx_i];
         mb.bf[i].nx = nx;                           // setup ring pointers
         mb.bf[i].pv = pv;
@@ -752,7 +776,6 @@ mpBuf_t * mp_get_write_buffer()     // get & clear a buffer
         _clear_buffer(mb.w);        // ++++RG this is redundant, it was just cleared in mp_free_run_buffer
         mb.w->buffer_state = MP_BUFFER_INITIALIZING;
         mb.buffers_available--;
-
         return (mb.w);
     }
     // The no buffer condition always causes a panic - invoked by the caller
@@ -786,7 +809,7 @@ void mp_commit_write_buffer(const blockType block_type)
         if ((mp.planner_state > PLANNER_STARTUP) && (cm.hold_state == FEEDHOLD_OFF)) {
             // NB: BEWARE! the exec may result in the planner buffer being
             // processed IMMEDIATELY and then freed - invalidating the contents
-            st_request_plan_move();                // request an exec if the runtime is not busy
+            st_request_forward_plan();                // request an exec if the runtime is not busy
         }
     }
     mb.w->plannable = true;                     // enable block for planning

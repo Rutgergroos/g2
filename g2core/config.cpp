@@ -2,7 +2,7 @@
  * config.cpp - application independent configuration handling
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -178,8 +178,7 @@ stat_t config_test_assertions()
         (BAD_MAGIC(nvl.magic_start)) ||
         (BAD_MAGIC(nvl.magic_end)) ||
         (BAD_MAGIC(nvStr.magic_start)) ||
-        (BAD_MAGIC(nvStr.magic_end)) ||
-        (global_string_buf[GLOBAL_STRING_LEN-1] != NUL)) {
+        (BAD_MAGIC(nvStr.magic_end))) {
         return(cm_panic(STAT_CONFIG_ASSERTION_FAILURE, "config_test_assertions()"));
     }
     return (STAT_OK);
@@ -239,7 +238,9 @@ stat_t get_flt(nvObj_t *nv)
 }
 
 /* Generic sets()
- *  set_nul()  - set nothing
+ *  set_noop() - set nothing and return OK
+ *  set_nul()  - set nothing, return OK
+ *  set_ro()   - set nothing, return read-only error
  *  set_ui8()  - set value as 8 bit uint8_t value
  *  set_int8() - set value as an 8 bit int8_t value
  *  set_01()   - set a 0 or 1 uint8_t value with validation
@@ -249,8 +250,26 @@ stat_t get_flt(nvObj_t *nv)
  *  set_data() - set value as 32 bit integer blind cast
  *  set_flt()  - set value as float
  */
-//stat_t set_nul(nvObj_t *nv) { return (STAT_PARAMETER_IS_READ_ONLY); }
-stat_t set_nul(nvObj_t *nv) { return (STAT_OK); }   // hack until JSON is refactored
+
+stat_t set_noop(nvObj_t *nv) {
+    nv->valuetype = TYPE_NULL;
+    return (STAT_OK);                       // hack until JSON is refactored
+}
+
+stat_t set_nul(nvObj_t *nv) { 
+//    nv->valuetype = TYPE_NULL;
+//    return (STAT_PARAMETER_IS_READ_ONLY);   // this is what it should be
+    return (STAT_OK);                       // hack until JSON is refactored
+}
+
+stat_t set_ro(nvObj_t *nv) {
+    // hack. If setting an SR it doesn't fail
+    if (strcmp(nv_body->token, "sr") == 0) {    
+        return (STAT_OK); 
+    }
+    nv->valuetype = TYPE_NULL;
+    return (STAT_PARAMETER_IS_READ_ONLY); 
+}
 
 stat_t set_ui8(nvObj_t *nv)
 {
@@ -268,27 +287,39 @@ stat_t set_int8(nvObj_t *nv)
 
 stat_t set_01(nvObj_t *nv)
 {
-    if ((nv->value < 0) || (nv->value > 1)) {
+    if (nv->value < 0) {
         nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_VALUE_RANGE_ERROR);
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
+    if (nv->value > 1) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
     return (set_ui8(nv));
 }
 
 stat_t set_012(nvObj_t *nv)
 {
-    if ((nv->value < 0) || (nv->value > 2)) {
+    if (nv->value < 0) {
         nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_VALUE_RANGE_ERROR);
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
+    if (nv->value > 2) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
     return (set_ui8(nv));
 }
 
 stat_t set_0123(nvObj_t *nv)
 {
-    if ((nv->value < 0) || (nv->value > 3)) {
+    if (nv->value < 0) {
         nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_VALUE_RANGE_ERROR);
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
+    if (nv->value > 3) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
     return (set_ui8(nv));
 }
@@ -584,7 +615,9 @@ nvObj_t *nv_add_object(const char *token)       // add an object to the body usi
     nvObj_t *nv = nv_body;
     for (uint8_t i=0; i<NV_BODY_LEN; i++) {
         if (nv->valuetype != TYPE_EMPTY) {
-            if ((nv = nv->nx) == NULL) return(NULL); // not supposed to find a NULL; here for safety
+            if ((nv = nv->nx) == NULL) {        // not supposed to find a NULL; here for safety
+                return(NULL);
+            }            
             continue;
         }
         // load the index from the token or die trying
@@ -600,7 +633,9 @@ nvObj_t *nv_add_integer(const char *token, const uint32_t value)// add an intege
     nvObj_t *nv = nv_body;
     for (uint8_t i=0; i<NV_BODY_LEN; i++) {
         if (nv->valuetype != TYPE_EMPTY) {
-            if ((nv = nv->nx) == NULL) return(NULL); // not supposed to find a NULL; here for safety
+            if ((nv = nv->nx) == NULL) {        // not supposed to find a NULL; here for safety
+                return(NULL); 
+            }
             continue;
         }
         strncpy(nv->token, token, TOKEN_LEN);
@@ -616,7 +651,9 @@ nvObj_t *nv_add_data(const char *token, const uint32_t value)// add an integer o
     nvObj_t *nv = nv_body;
     for (uint8_t i=0; i<NV_BODY_LEN; i++) {
         if (nv->valuetype != TYPE_EMPTY) {
-            if ((nv = nv->nx) == NULL) return(NULL); // not supposed to find a NULL; here for safety
+            if ((nv = nv->nx) == NULL) {        // not supposed to find a NULL; here for safety
+                 return(NULL); 
+            }            
             continue;
         }
         strcpy(nv->token, token);
@@ -633,7 +670,9 @@ nvObj_t *nv_add_float(const char *token, const float value)    // add a float ob
     nvObj_t *nv = nv_body;
     for (uint8_t i=0; i<NV_BODY_LEN; i++) {
         if (nv->valuetype != TYPE_EMPTY) {
-            if ((nv = nv->nx) == NULL) return(NULL);        // not supposed to find a NULL; here for safety
+            if ((nv = nv->nx) == NULL) {        // not supposed to find a NULL; here for safety
+                return(NULL);
+            }            
             continue;
         }
         strncpy(nv->token, token, TOKEN_LEN);
@@ -649,7 +688,9 @@ nvObj_t *nv_add_string(const char *token, const char *string) // add a string ob
     nvObj_t *nv = nv_body;
     for (uint8_t i=0; i<NV_BODY_LEN; i++) {
         if (nv->valuetype != TYPE_EMPTY) {
-            if ((nv = nv->nx) == NULL) return(NULL);        // not supposed to find a NULL; here for safety
+            if ((nv = nv->nx) == NULL) {        // not supposed to find a NULL; here for safety
+                return(NULL); 
+            }            
             continue;
         }
         strncpy(nv->token, token, TOKEN_LEN);
@@ -682,6 +723,7 @@ nvObj_t *nv_add_conditional_message(const char *string)    // conditionally add 
  *  Inputs:
  *    json_flags = JSON_OBJECT_FORMAT - print just the body w/o header or footer
  *    json_flags = JSON_RESPONSE_FORMAT - print a full "r" object with footer
+ *    json_flags = JSON_RESPONSE_TO_MUTED_FORMAT - JSON_RESPONSE_FORMAT, but only to muted channels
  *
  *    text_flags = TEXT_INLINE_PAIRS - print text as name/value pairs on a single line
  *    text_flags = TEXT_INLINE_VALUES - print text as comma separated values on a single line
@@ -690,7 +732,7 @@ nvObj_t *nv_add_conditional_message(const char *string)    // conditionally add 
 
 void nv_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags)
 {
-    if (js.json_mode == JSON_MODE) {
+    if ((js.json_mode == JSON_MODE) || (js.json_mode == MARLIN_COMM_MODE)) {
         json_print_list(status, json_flags);
     } else {
         text_print_list(status, text_flags);

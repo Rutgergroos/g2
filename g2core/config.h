@@ -2,7 +2,7 @@
  * config.h - configuration sub-system generic part (see config_app for application part)
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -177,7 +177,7 @@ typedef uint16_t index_t;               // use this if there are > 255 indexed o
 #define NV_MESSAGE_LEN 128              // sufficient space to contain end-user messages
 
                                         // pre-allocated defines (take RAM permanently)
-#define NV_SHARED_STRING_LEN 512        // shared string for string values
+#define NV_SHARED_STRING_LEN 1024        // shared string for string values
 #define NV_BODY_LEN 40                  // body elements - allow for 1 parent + N children
 #define NV_EXEC_LEN 10                  // elements reserved for exec, which won't directly respond
 // (each body element takes about 30 bytes of RAM)
@@ -195,7 +195,8 @@ typedef uint16_t index_t;               // use this if there are > 255 indexed o
 typedef enum {
     TEXT_MODE = 0,                      // sticky text mode
     JSON_MODE,                          // sticky JSON mode
-    AUTO_MODE                           // auto-configure communications mode
+    AUTO_MODE,                          // auto-configure communications mode
+    MARLIN_COMM_MODE,                   // sticky marlin-compatibility mode (if compiled in)
 } commMode;
 
 typedef enum {
@@ -317,7 +318,9 @@ bool nv_index_lt_groups(index_t index); // (see config_app.c)
 bool nv_group_is_prefixed(char *group);
 
 // generic internal functions and accessors
-stat_t set_nul(nvObj_t *nv);            // set nothing
+stat_t set_noop(nvObj_t *nv);           // set nothing and return OK
+stat_t set_nul(nvObj_t *nv);            // set nothing, return OK
+stat_t set_ro(nvObj_t *nv);             // set nothing, return read-only error
 stat_t set_ui8(nvObj_t *nv);            // set uint8_t value
 stat_t set_int8(nvObj_t *nv);           // set signed 8 bit integer
 stat_t set_01(nvObj_t *nv);             // set a 0 or 1 value with validation
@@ -353,6 +356,8 @@ void nv_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags);
 
 // application specific helpers and functions (config_app.c)
 stat_t set_flu(nvObj_t *nv);            // set floating point number with G20/G21 units conversion
+stat_t set_flup(nvObj_t *nv);           // set positive floating point number with G20/G21 units conversion
+stat_t set_fltp(nvObj_t *nv);           // set positive floating point number with no units conversion
 void preprocess_float(nvObj_t *nv);     // pre-process float values for units and illegal values
 
 // diagnostics

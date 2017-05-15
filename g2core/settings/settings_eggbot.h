@@ -1,8 +1,9 @@
 /*
- * settings_test.h - settings for testing - subject to wild change
+ * settings_eggbot.h - settings for the EggBot
  * This file is part of the g2core project
  *
- * Copyright (c) 2014 - 2016 Alden S. Hart Jr.
+ * Copyright (c) 2016 Alden S. Hart Jr.
+ * Copyright (c) 2016 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -30,7 +31,7 @@
 /***********************************************************************/
 
 // ***> NOTE: The init message must be a single line with no CRs or LFs
-#define INIT_MESSAGE "Initializing configs to TESTV9 settings"
+#define INIT_MESSAGE "Initializing configs to WaterColorBot v2 settings"
 
 #define JUNCTION_INTEGRATION_TIME   1.50    // cornering - usually between 0.5 and 2.0 (higher is faster)
 #define CHORDAL_TOLERANCE           0.01    // chordal accuracy for arc drawing (in mm)
@@ -61,7 +62,7 @@
 #define STATUS_REPORT_MIN_MS        100                     // milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
 
-//#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","admo","frmo","momo","stat"
+//#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","bcr","feed","vel","unit","coor","dist","admo","frmo","momo","stat"
 #define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","feed","vel","momo","stat"
 
 // Alternate SRs
@@ -79,7 +80,7 @@
 #define GCODE_DEFAULT_PLANE         CANON_PLANE_XY          // CANON_PLANE_XY, CANON_PLANE_XZ, or CANON_PLANE_YZ
 #define GCODE_DEFAULT_COORD_SYSTEM  G54                     // G54, G55, G56, G57, G58 or G59
 #define GCODE_DEFAULT_PATH_CONTROL  PATH_CONTINUOUS
-#define GCODE_DEFAULT_DISTANCE_MODE ABSOLUTE_DISTANCE_MODE
+#define GCODE_DEFAULT_DISTANCE_MODE ABSOLUTE_MODE
 
 // *** motor settings ************************************************************************************
 
@@ -89,33 +90,37 @@
 #define MOTOR_POWER_MODE            MOTOR_POWERED_IN_CYCLE  // default motor power mode (see cmMotorPowerMode in stepper.h)
 #define MOTOR_POWER_TIMEOUT         2.00                    // motor power timeout in seconds
 
-#define M1_MOTOR_MAP                AXIS_X                  // 1ma
+#define M1_MOTOR_MAP                AXIS_Y                  // 1ma
 #define M1_STEP_ANGLE               1.8                     // 1sa
-#define M1_TRAVEL_PER_REV           5.08                    // 1tr
-#define M1_MICROSTEPS               8                       // 1mi        1,2,4,8
+#define M1_TRAVEL_PER_REV           125.66370614            // 1tr
+#define M1_MICROSTEPS               32                      // 1mi        1,2,4,8
 #define M1_POLARITY                 1                       // 1po        0=normal, 1=reversed
 #define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm        standard
-#define M1_POWER_LEVEL              0.75
+#define M1_POWER_LEVEL              0.4
 
-#define M2_MOTOR_MAP                AXIS_Y
+#define M2_MOTOR_MAP                AXIS_X
 #define M2_STEP_ANGLE               1.8
-#define M2_TRAVEL_PER_REV           5.08
-#define M2_MICROSTEPS               8
-#define M2_POLARITY                 0
+#define M2_TRAVEL_PER_REV           125.66370614
+#define M2_MICROSTEPS               32
+#define M2_POLARITY                 1
 #define M2_POWER_MODE               MOTOR_POWER_MODE
-#define M2_POWER_LEVEL              0.75
+#define M2_POWER_LEVEL              0.4
 
 #define M3_MOTOR_MAP                AXIS_Z
-#define M3_STEP_ANGLE               1.8
-#define M3_TRAVEL_PER_REV           2.1166666
-#define M3_MICROSTEPS               8
+                                                            // This "stepper" is a hobby servo. Note that all hobby
+                                                            //   servo settings are per full servo range, instead of
+                                                            //   per revolution.
+#define M3_STEP_ANGLE               1.8                     // hobby servos are simulated with 200 "full steps"
+#define M3_TRAVEL_PER_REV           26                      // this is actually the full travel of the servo, not
+                                                            //   necessarily covering a revolution
+#define M3_MICROSTEPS               32                      // the max step resolution for a hobby servo is 1/32
 #define M3_POLARITY                 1
-#define M3_POWER_MODE               MOTOR_POWER_MODE
-#define M3_POWER_LEVEL              0.50
+#define M3_POWER_MODE               MOTOR_ALWAYS_POWERED
+#define M3_POWER_LEVEL              0.50                    // this is ignored
 
 #define M4_MOTOR_MAP                AXIS_A
 #define M4_STEP_ANGLE               1.8
-#define M4_TRAVEL_PER_REV           360            // degrees moved per motor rev
+#define M4_TRAVEL_PER_REV           360                     // degrees moved per motor rev
 #define M4_MICROSTEPS               32
 #define M4_POLARITY                 0
 #define M4_POWER_MODE               MOTOR_POWER_MODE
@@ -123,10 +128,10 @@
 
 // *** axis settings **********************************************************************************
 
-#define JERK_MAX    500
+#define JERK_MAX    20000
 
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX              1600                    // xvm  G0 max velocity in mm/min
+#define X_VELOCITY_MAX              50000                    // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX                400                     // xtm  maximum travel - used by soft limits and homing
@@ -140,7 +145,7 @@
 #define X_ZERO_BACKOFF              2                       // xzb  mm
 
 #define Y_AXIS_MODE                 AXIS_STANDARD
-#define Y_VELOCITY_MAX              1600
+#define Y_VELOCITY_MAX              50000
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
 #define Y_TRAVEL_MAX                175
@@ -154,11 +159,11 @@
 #define Y_ZERO_BACKOFF              2
 
 #define Z_AXIS_MODE                 AXIS_STANDARD
-#define Z_VELOCITY_MAX              1000
+#define Z_VELOCITY_MAX              15000
 #define Z_FEEDRATE_MAX              Z_VELOCITY_MAX
 #define Z_TRAVEL_MIN                0
 #define Z_TRAVEL_MAX                75
-#define Z_JERK_MAX                  JERK_MAX
+#define Z_JERK_MAX                  5000
 #define Z_JERK_HIGH_SPEED           Z_JERK_MAX
 #define Z_HOMING_INPUT              6
 #define Z_HOMING_DIRECTION          1

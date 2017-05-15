@@ -34,27 +34,31 @@
 
 //+++++ DIAGNOSTICS
 
+//#if IN_DEBUGGER < 1
 #define LOG_RETURN(msg)  // LOG_RETURN with no action (production)
-/*
-#include "xio.h"
-static char logbuf[128];
-static void _logger(const char *msg, const mpBuf_t *bf)         // LOG_RETURN with full state dump
-{
-    sprintf(logbuf, "[%2d] %s (%d) mt:%5.2f, L:%1.3f [%1.3f, %1.3f, %1.3f] V:[%1.2f, %1.2f, %1.2f]\n",
-                    bf->buffer_number, msg, bf->hint, (bf->block_time * 60000),
-                    bf->length, bf->head_length, bf->body_length, bf->tail_length,
-                    bf->pv->exit_velocity, bf->cruise_velocity, bf->exit_velocity);
-    xio_writeline(logbuf);
-}
-#define LOG_RETURN(msg) { _logger(msg, bf); }
-*/
+//#else
+//#include "xio.h"
+//static char logbuf[128];
+//static void _logger(const char *msg, const mpBuf_t *bf)         // LOG_RETURN with full state dump
+//{
+//    sprintf(logbuf, "[%2d] %s (%d) mt:%5.2f, L:%1.3f [%1.3f, %1.3f, %1.3f] V:[%1.2f, %1.2f, %1.2f]\n",
+//                    bf->buffer_number, msg, bf->hint, (bf->block_time * 60000),
+//                    bf->length, bf->head_length, bf->body_length, bf->tail_length,
+//                    bf->pv->exit_velocity, bf->cruise_velocity, bf->exit_velocity);
+//    xio_writeline(logbuf);
+//}
+//#define LOG_RETURN(msg) { _logger(msg, bf); }
+//#endif
 
-//#define TRAP_ZERO(t,m)
+#if IN_DEBUGGER < 1
+#define TRAP_ZERO(t,m)
+#else
 #define TRAP_ZERO(t, m)                             \
     if (fp_ZERO(t)) {                               \
         rpt_exception(STAT_MINIMUM_LENGTH_MOVE, m); \
         _debug_trap(m);                             \
     }
+#endif
 
 //+++++ END DIAGNOSTICS
 
@@ -80,7 +84,7 @@ static float _get_meet_velocity(const float          v_0,
  *
  *  Note we use three data structures: mr, bf, and block.
  *
- *  bf holds the data from aline and back-planning. For the most part it is immuatable.
+ *  bf holds the data from aline and back-planning. For the most part it is immutable.
  *
  *  block is the data for forward-planning. There are only two block structures, and they
  *  are for the current block and the next block.
@@ -94,8 +98,8 @@ static float _get_meet_velocity(const float          v_0,
  *
  *    All values of block are expected to be setup by mp_calculate_ramps.
  *
- *  Quick cheat-sheet on which is in bf and whcih is in block:
- *    bf:
+ *  Quick cheat-sheet on which is in buffer (bf) and which is in block:
+ *    buffer (bf):
  *      block_type
  *      hint
  *      {cruise,exit}_vmax
@@ -290,9 +294,9 @@ void mp_calculate_ramps(mpBlockRuntimeBuf_t* block, mpBuf_t* bf, const float ent
     // PERFECT_DECELERATION
     // MIXED_DECELERATION
 
-    // All that remians is ASYMMETRIC_BUMP and SYMMETRIC_BUMP.
+    // All that remains is ASYMMETRIC_BUMP and SYMMETRIC_BUMP.
     // We don't really care if it's symmetric, since the first test that _get_meet_velocity
-    //  does is for a symmetic move. It's cheaper to just let it do that then to try and prevent it.
+    //  does is for a symmetric move. It's cheaper to just let it do that then to try and prevent it.
 
     // *** Requested-Fit cases (2) ***
 

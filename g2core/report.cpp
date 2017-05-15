@@ -59,9 +59,10 @@ stat_t rpt_exception(stat_t status, const char *msg)
 
         // you cannot send an exception report if the USB has not been set up. Causes a processor exception.
         if (cs.controller_state >= CONTROLLER_READY) {
-           sprintf(global_string_buf, "{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s - %s\"}}\n",
+            char buffer[128];
+            sprintf(buffer, "{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s - %s\"}}\n",
                                         G2CORE_FIRMWARE_BUILD, status, get_status_message(status), msg);
-           xio_writeline(global_string_buf);
+            xio_writeline(buffer);
         }
     }
     return (status);            // makes it possible to inline, e.g: return(rpt_exception(status));
@@ -111,7 +112,13 @@ void rpt_print_loading_configs_message(void)
 
 void rpt_print_system_ready_message(void)
 {
+#if MARLIN_COMPAT_ENABLED == true
+    if (MARLIN_COMM_MODE != js.json_mode) {
+        _startup_helper(STAT_OK, "SYSTEM READY");
+    }
+#else
     _startup_helper(STAT_OK, "SYSTEM READY");
+#endif
     if (cs.comm_mode == TEXT_MODE) { text_response(STAT_OK, (char *)"");}// prompt
 }
 
@@ -430,7 +437,8 @@ stat_t sr_set(nvObj_t *nv)
 stat_t sr_set_si(nvObj_t *nv)
 {
     if (nv->value < STATUS_REPORT_MIN_MS) {
-        nv->value = STATUS_REPORT_MIN_MS;
+        nv->valuetype = TYPE_NULL;
+        return(STAT_INPUT_LESS_THAN_MIN_VALUE);
     }
     set_int(nv);
     return(STAT_OK);
@@ -499,7 +507,8 @@ void qr_request_queue_report(int8_t buffers)
     }
 
     // time-throttle requests while generating arcs
-    qr.motion_mode = cm_get_motion_mode(ACTIVE_MODEL);
+//    qr.motion_mode = cm_get_motion_mode(ACTIVE_MODEL);
+    qr.motion_mode = cm_get_motion_mode((GCodeState_t *)&cm.gm);
     if ((qr.motion_mode == MOTION_MODE_CW_ARC) || (qr.motion_mode == MOTION_MODE_CCW_ARC)) {
         uint32_t tick = SysTickTimer_getValue();
         if (tick - qr.init_tick < MIN_ARC_QR_INTERVAL) {

@@ -59,8 +59,9 @@ enum hwPlatform {
 #define AXES        6           // number of axes supported in this version
 #define HOMING_AXES 4           // number of axes that can be homed (assumes Zxyabc sequence)
 #define MOTORS      5           // number of motors on the board
-#define COORDS      6           // number of supported coordinate systems (1-6)
+#define COORDS      6           // number of supported coordinate systems (index starts at 1)
 #define PWMS        2           // number of supported PWM channels
+#define TOOLS       32          // number of entries in tool table (index starts at 1)
 
 
 ////////////////////////////
@@ -83,11 +84,9 @@ using Motate::OutputPin;
  * Global System Defines *
  *************************/
 
-#undef F_CPU                        // CPU clock - set for delays
-#define F_CPU 84000000UL
 #define MILLISECONDS_PER_TICK 1     // MS for system tick (systick * N)
 #define SYS_ID_DIGITS 12            // actual digits in system ID (up to 16)
-#define SYS_ID_LEN 16               // total length including dashes and NUL
+#define SYS_ID_LEN 24               // total length including dashes and NUL
 
 /************************************************************************************
  **** ARM SAM3X8E SPECIFIC HARDWARE *************************************************
@@ -121,18 +120,19 @@ using Motate::OutputPin;
 /**** Stepper DDA and dwell timer settings ****/
 
 //#define FREQUENCY_DDA    200000UL    // Hz step frequency. Interrupts actually fire at 2x (400 KHz)
-#define FREQUENCY_DDA    150000UL    // Hz step frequency. Interrupts actually fire at 2x (300 KHz)
+#define FREQUENCY_DDA    300000UL    // Hz step frequency. Interrupts actually fire at 2x (300 KHz)
 #define FREQUENCY_DWELL    1000UL
 #define FREQUENCY_SGI    200000UL    // 200,000 Hz means software interrupts will fire 5 uSec after being called
 
 /**** Motate Definitions ****/
 
 // Timer definitions. See stepper.h and other headers for setup
-typedef TimerChannel<0,0> dda_timer_type;  // stepper pulse generation in stepper.cpp
-typedef TimerChannel<1,0> dwell_timer_type;  // dwell timing in stepper.cpp
-typedef ServiceCall<0> load_timer_type;  // request load timer in stepper.cpp
-typedef ServiceCall<1> exec_timer_type;  // request exec timer in stepper.cpp
-typedef ServiceCall<2> fwd_plan_timer_type;  // request exec timer in stepper.cpp
+typedef TimerChannel<9, 0> dda_timer_type;    // stepper pulse generation in stepper.cpp
+typedef TimerChannel<10, 0> load_timer_type;       // request load timer in stepper.cpp
+typedef ServiceCall<1> exec_timer_type;       // request exec timer in stepper.cpp
+typedef ServiceCall<2> fwd_plan_timer_type;   // request exec timer in stepper.cpp
+
+Motate::service_call_number kSPI_ServiceCallNumber = 3;
 
 // Pin assignments
 

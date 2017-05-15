@@ -2,7 +2,7 @@
  * settings_default.h - default machine profile - Set for Shapeoko2
  * This file is part of the g2core project
  *
- * Copyright (c) 2012 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2012 - 2017 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -58,6 +58,11 @@
 
 // *** Machine configuration settings *** //
 
+#ifndef USB_SERIAL_PORTS_EXPOSED
+#define USB_SERIAL_PORTS_EXPOSED   1        // Valid options are 1 or 2, only!
+#endif
+
+
 #ifndef JUNCTION_INTEGRATION_TIME
 #define JUNCTION_INTEGRATION_TIME   0.75    // {jt: cornering - between 0.05 and 2.00 (max)
 #endif
@@ -82,7 +87,7 @@
 #endif
 
 #ifndef SPINDLE_ENABLE_POLARITY
-#define SPINDLE_ENABLE_POLARITY     1       // {spep: 0=active low, 1=active high
+#define SPINDLE_ENABLE_POLARITY     SPINDLE_ACTIVE_HIGH  // {spep: 0=active low, 1=active high
 #endif
 
 #ifndef SPINDLE_DIR_POLARITY
@@ -109,7 +114,11 @@
 #define COOLANT_PAUSE_ON_HOLD       true    // {coph:
 #endif
 
-/* 
+#ifndef PROBE_REPORT_ENABLE
+#define PROBE_REPORT_ENABLE         true    // {prbr:
+#endif
+
+/*
  * The following is to fix an issue where feedrate override was being defined in some users
  * settings files but not others. This would otherwise cause an undefined compile error.
  *
@@ -134,6 +143,10 @@
 
 #ifndef XIO_ENABLE_FLOW_CONTROL
 #define XIO_ENABLE_FLOW_CONTROL     FLOW_CONTROL_RTS        // FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
+#endif
+
+#ifndef XIO_UART_MUTES_WHEN_USB_CONNECTED
+#define XIO_UART_MUTES_WHEN_USB_CONNECTED  0                // UART will be muted when USB connected (off by default)
 #endif
 
 #ifndef JSON_VERBOSITY
@@ -162,6 +175,11 @@
 //#define STATUS_REPORT_DEFAULTS "line","vel","mpox","mpoy","mpoz","mpoa","coor","ofsa","ofsx","ofsy","ofsz","dist","unit","stat","homz","homy","homx","momo"
 #endif
 
+
+#ifndef MARLIN_COMPAT_ENABLED
+#define MARLIN_COMPAT_ENABLED       false                   // boolean, either true or false
+#endif
+
 // *** Gcode Startup Defaults *** //
 
 #ifndef GCODE_DEFAULT_UNITS
@@ -181,7 +199,7 @@
 #endif
 
 #ifndef GCODE_DEFAULT_DISTANCE_MODE
-#define GCODE_DEFAULT_DISTANCE_MODE ABSOLUTE_MODE           // {gdi: ABSOLUTE_MODE, INCREMENTAL_MODE
+#define GCODE_DEFAULT_DISTANCE_MODE ABSOLUTE_DISTANCE_MODE  // {gdi: ABSOLUTE_DISTANCE_MODE, INCREMENTAL_DISTANCE_MODE
 #endif
 
 
@@ -229,7 +247,7 @@
 #define M2_MICROSTEPS               8
 #endif
 #ifndef M2_STEPS_PER_UNIT
-#define M2_STEPS_PER_UNIT           0 
+#define M2_STEPS_PER_UNIT           0
 #endif
 #ifndef M2_POLARITY
 #define M2_POLARITY                 0
@@ -665,7 +683,7 @@
 
 // Xmin on v9 board
 #ifndef DI1_MODE
-#define DI1_MODE                    NORMALLY_OPEN
+#define DI1_MODE                    IO_ACTIVE_LOW     // Normally open
 #endif
 #ifndef DI1_ACTION
 #define DI1_ACTION                  INPUT_ACTION_NONE
@@ -676,7 +694,7 @@
 
 // Xmax
 #ifndef DI2_MODE
-#define DI2_MODE                    NORMALLY_OPEN
+#define DI2_MODE                    IO_ACTIVE_LOW     // Normally open
 #endif
 #ifndef DI2_ACTION
 #define DI2_ACTION                  INPUT_ACTION_NONE
@@ -687,7 +705,7 @@
 
 // Ymin
 #ifndef DI3_MODE
-#define DI3_MODE                    NORMALLY_OPEN
+#define DI3_MODE                    IO_ACTIVE_LOW     // Normally open
 #endif
 #ifndef DI3_ACTION
 #define DI3_ACTION                  INPUT_ACTION_NONE
@@ -698,7 +716,7 @@
 
 // Ymax
 #ifndef DI4_MODE
-#define DI4_MODE                    NORMALLY_OPEN
+#define DI4_MODE                    IO_ACTIVE_LOW     // Normally open
 #endif
 #ifndef DI4_ACTION
 #define DI4_ACTION                  INPUT_ACTION_NONE
@@ -709,18 +727,18 @@
 
 // Zmin
 #ifndef DI5_MODE
-#define DI5_MODE                    NORMALLY_OPEN
+#define DI5_MODE                    IO_ACTIVE_LOW     // Normally open
 #endif
 #ifndef DI5_ACTION
 #define DI5_ACTION                  INPUT_ACTION_NONE
 #endif
 #ifndef DI5_FUNCTION
-#define DI5_FUNCTION                INPUT_FUNCTION_NONE
+#define DI5_FUNCTION                INPUT_FUNCTION_PROBE
 #endif
 
 // Zmax
 #ifndef DI6_MODE
-#define DI6_MODE                    NORMALLY_OPEN
+#define DI6_MODE                    IO_ACTIVE_LOW     // Normally open
 #endif
 #ifndef DI6_ACTION
 #define DI6_ACTION                  INPUT_ACTION_NONE
@@ -731,7 +749,7 @@
 
 // Amin
 #ifndef DI7_MODE
-#define DI7_MODE                    NORMALLY_OPEN
+#define DI7_MODE                    IO_ACTIVE_LOW     // Normally open
 #endif
 #ifndef DI7_ACTION
 #define DI7_ACTION                  INPUT_ACTION_NONE
@@ -742,7 +760,7 @@
 
 // Amax
 #ifndef DI8_MODE
-#define DI8_MODE                    NORMALLY_OPEN
+#define DI8_MODE                    IO_ACTIVE_LOW     // Normally open
 #endif
 #ifndef DI8_ACTION
 #define DI8_ACTION                  INPUT_ACTION_NONE
@@ -753,7 +771,7 @@
 
 // Safety line
 #ifndef DI9_MODE
-#define DI9_MODE                    NORMALLY_CLOSED     // Normally closed
+#define DI9_MODE                    IO_ACTIVE_HIGH     // Normally closed
 #endif
 #ifndef DI9_ACTION
 #define DI9_ACTION                  INPUT_ACTION_NONE
@@ -792,7 +810,7 @@
 #define DI12_FUNCTION               INPUT_FUNCTION_NONE
 #endif
 
-// DIGITAL OUTPUTS - CUrrently these are hard-wired to extruders
+// DIGITAL OUTPUTS - Currently these are hard-wired to extruders
 
 //Extruder1_PWM
 #ifndef DO1_MODE
@@ -853,13 +871,13 @@
 // *** PWM Settings *** //
 
 #ifndef P1_PWM_FREQUENCY
-#define P1_PWM_FREQUENCY            100.0                   // in Hz
+#define P1_PWM_FREQUENCY            100                   // in Hz
 #endif
 #ifndef P1_CW_SPEED_LO
-#define P1_CW_SPEED_LO              7900.0                  // in RPM (arbitrary units)
+#define P1_CW_SPEED_LO              7900                  // in RPM (arbitrary units)
 #endif
 #ifndef P1_CW_SPEED_HI
-#define P1_CW_SPEED_HI              12800.0
+#define P1_CW_SPEED_HI              12800
 #endif
 #ifndef P1_CW_PHASE_LO
 #define P1_CW_PHASE_LO              0.13                    // phase [0..1]
@@ -1051,6 +1069,616 @@
 #endif
 #ifndef G59_C_OFFSET
 #define G59_C_OFFSET 0
+#endif
+
+// *** Tool Table Defaults *** //
+
+#ifndef TT1_X_OFFSET
+#define TT1_X_OFFSET 0
+#endif
+#ifndef TT1_Y_OFFSET
+#define TT1_Y_OFFSET 0
+#endif
+#ifndef TT1_Z_OFFSET
+#define TT1_Z_OFFSET 0
+#endif
+#ifndef TT1_A_OFFSET
+#define TT1_A_OFFSET 0
+#endif
+#ifndef TT1_B_OFFSET
+#define TT1_B_OFFSET 0
+#endif
+#ifndef TT1_C_OFFSET
+#define TT1_C_OFFSET 0
+#endif
+
+#ifndef TT2_X_OFFSET
+#define TT2_X_OFFSET 0
+#endif
+#ifndef TT2_Y_OFFSET
+#define TT2_Y_OFFSET 0
+#endif
+#ifndef TT2_Z_OFFSET
+#define TT2_Z_OFFSET 0
+#endif
+#ifndef TT2_A_OFFSET
+#define TT2_A_OFFSET 0
+#endif
+#ifndef TT2_B_OFFSET
+#define TT2_B_OFFSET 0
+#endif
+#ifndef TT2_C_OFFSET
+#define TT2_C_OFFSET 0
+#endif
+
+#ifndef TT3_X_OFFSET
+#define TT3_X_OFFSET 0
+#endif
+#ifndef TT3_Y_OFFSET
+#define TT3_Y_OFFSET 0
+#endif
+#ifndef TT3_Z_OFFSET
+#define TT3_Z_OFFSET 0
+#endif
+#ifndef TT3_A_OFFSET
+#define TT3_A_OFFSET 0
+#endif
+#ifndef TT3_B_OFFSET
+#define TT3_B_OFFSET 0
+#endif
+#ifndef TT3_C_OFFSET
+#define TT3_C_OFFSET 0
+#endif
+
+#ifndef TT4_X_OFFSET
+#define TT4_X_OFFSET 0
+#endif
+#ifndef TT4_Y_OFFSET
+#define TT4_Y_OFFSET 0
+#endif
+#ifndef TT4_Z_OFFSET
+#define TT4_Z_OFFSET 0
+#endif
+#ifndef TT4_A_OFFSET
+#define TT4_A_OFFSET 0
+#endif
+#ifndef TT4_B_OFFSET
+#define TT4_B_OFFSET 0
+#endif
+#ifndef TT4_C_OFFSET
+#define TT4_C_OFFSET 0
+#endif
+
+#ifndef TT5_X_OFFSET
+#define TT5_X_OFFSET 0
+#endif
+#ifndef TT5_Y_OFFSET
+#define TT5_Y_OFFSET 0
+#endif
+#ifndef TT5_Z_OFFSET
+#define TT5_Z_OFFSET 0
+#endif
+#ifndef TT5_A_OFFSET
+#define TT5_A_OFFSET 0
+#endif
+#ifndef TT5_B_OFFSET
+#define TT5_B_OFFSET 0
+#endif
+#ifndef TT5_C_OFFSET
+#define TT5_C_OFFSET 0
+#endif
+
+#ifndef TT6_X_OFFSET
+#define TT6_X_OFFSET 0
+#endif
+#ifndef TT6_Y_OFFSET
+#define TT6_Y_OFFSET 0
+#endif
+#ifndef TT6_Z_OFFSET
+#define TT6_Z_OFFSET 0
+#endif
+#ifndef TT6_A_OFFSET
+#define TT6_A_OFFSET 0
+#endif
+#ifndef TT6_B_OFFSET
+#define TT6_B_OFFSET 0
+#endif
+#ifndef TT6_C_OFFSET
+#define TT6_C_OFFSET 0
+#endif
+
+#ifndef TT7_X_OFFSET
+#define TT7_X_OFFSET 0
+#endif
+#ifndef TT7_Y_OFFSET
+#define TT7_Y_OFFSET 0
+#endif
+#ifndef TT7_Z_OFFSET
+#define TT7_Z_OFFSET 0
+#endif
+#ifndef TT7_A_OFFSET
+#define TT7_A_OFFSET 0
+#endif
+#ifndef TT7_B_OFFSET
+#define TT7_B_OFFSET 0
+#endif
+#ifndef TT7_C_OFFSET
+#define TT7_C_OFFSET 0
+#endif
+
+#ifndef TT8_X_OFFSET
+#define TT8_X_OFFSET 0
+#endif
+#ifndef TT8_Y_OFFSET
+#define TT8_Y_OFFSET 0
+#endif
+#ifndef TT8_Z_OFFSET
+#define TT8_Z_OFFSET 0
+#endif
+#ifndef TT8_A_OFFSET
+#define TT8_A_OFFSET 0
+#endif
+#ifndef TT8_B_OFFSET
+#define TT8_B_OFFSET 0
+#endif
+#ifndef TT8_C_OFFSET
+#define TT8_C_OFFSET 0
+#endif
+
+#ifndef TT9_X_OFFSET
+#define TT9_X_OFFSET 0
+#endif
+#ifndef TT9_Y_OFFSET
+#define TT9_Y_OFFSET 0
+#endif
+#ifndef TT9_Z_OFFSET
+#define TT9_Z_OFFSET 0
+#endif
+#ifndef TT9_A_OFFSET
+#define TT9_A_OFFSET 0
+#endif
+#ifndef TT9_B_OFFSET
+#define TT9_B_OFFSET 0
+#endif
+#ifndef TT9_C_OFFSET
+#define TT9_C_OFFSET 0
+#endif
+
+#ifndef TT10_X_OFFSET
+#define TT10_X_OFFSET 0
+#endif
+#ifndef TT10_Y_OFFSET
+#define TT10_Y_OFFSET 0
+#endif
+#ifndef TT10_Z_OFFSET
+#define TT10_Z_OFFSET 0
+#endif
+#ifndef TT10_A_OFFSET
+#define TT10_A_OFFSET 0
+#endif
+#ifndef TT10_B_OFFSET
+#define TT10_B_OFFSET 0
+#endif
+#ifndef TT10_C_OFFSET
+#define TT10_C_OFFSET 0
+#endif
+
+#ifndef TT11_X_OFFSET
+#define TT11_X_OFFSET 0
+#endif
+#ifndef TT11_Y_OFFSET
+#define TT11_Y_OFFSET 0
+#endif
+#ifndef TT11_Z_OFFSET
+#define TT11_Z_OFFSET 0
+#endif
+#ifndef TT11_A_OFFSET
+#define TT11_A_OFFSET 0
+#endif
+#ifndef TT11_B_OFFSET
+#define TT11_B_OFFSET 0
+#endif
+#ifndef TT11_C_OFFSET
+#define TT11_C_OFFSET 0
+#endif
+
+#ifndef TT12_X_OFFSET
+#define TT12_X_OFFSET 0
+#endif
+#ifndef TT12_Y_OFFSET
+#define TT12_Y_OFFSET 0
+#endif
+#ifndef TT12_Z_OFFSET
+#define TT12_Z_OFFSET 0
+#endif
+#ifndef TT12_A_OFFSET
+#define TT12_A_OFFSET 0
+#endif
+#ifndef TT12_B_OFFSET
+#define TT12_B_OFFSET 0
+#endif
+#ifndef TT12_C_OFFSET
+#define TT12_C_OFFSET 0
+#endif
+
+#ifndef TT13_X_OFFSET
+#define TT13_X_OFFSET 0
+#endif
+#ifndef TT13_Y_OFFSET
+#define TT13_Y_OFFSET 0
+#endif
+#ifndef TT13_Z_OFFSET
+#define TT13_Z_OFFSET 0
+#endif
+#ifndef TT13_A_OFFSET
+#define TT13_A_OFFSET 0
+#endif
+#ifndef TT13_B_OFFSET
+#define TT13_B_OFFSET 0
+#endif
+#ifndef TT13_C_OFFSET
+#define TT13_C_OFFSET 0
+#endif
+
+#ifndef TT14_X_OFFSET
+#define TT14_X_OFFSET 0
+#endif
+#ifndef TT14_Y_OFFSET
+#define TT14_Y_OFFSET 0
+#endif
+#ifndef TT14_Z_OFFSET
+#define TT14_Z_OFFSET 0
+#endif
+#ifndef TT14_A_OFFSET
+#define TT14_A_OFFSET 0
+#endif
+#ifndef TT14_B_OFFSET
+#define TT14_B_OFFSET 0
+#endif
+#ifndef TT14_C_OFFSET
+#define TT14_C_OFFSET 0
+#endif
+
+#ifndef TT15_X_OFFSET
+#define TT15_X_OFFSET 0
+#endif
+#ifndef TT15_Y_OFFSET
+#define TT15_Y_OFFSET 0
+#endif
+#ifndef TT15_Z_OFFSET
+#define TT15_Z_OFFSET 0
+#endif
+#ifndef TT15_A_OFFSET
+#define TT15_A_OFFSET 0
+#endif
+#ifndef TT15_B_OFFSET
+#define TT15_B_OFFSET 0
+#endif
+#ifndef TT15_C_OFFSET
+#define TT15_C_OFFSET 0
+#endif
+
+#ifndef TT16_X_OFFSET
+#define TT16_X_OFFSET 0
+#endif
+#ifndef TT16_Y_OFFSET
+#define TT16_Y_OFFSET 0
+#endif
+#ifndef TT16_Z_OFFSET
+#define TT16_Z_OFFSET 0
+#endif
+#ifndef TT16_A_OFFSET
+#define TT16_A_OFFSET 0
+#endif
+#ifndef TT16_B_OFFSET
+#define TT16_B_OFFSET 0
+#endif
+#ifndef TT16_C_OFFSET
+#define TT16_C_OFFSET 0
+#endif
+
+#ifndef TT17_X_OFFSET
+#define TT17_X_OFFSET 0
+#endif
+#ifndef TT17_Y_OFFSET
+#define TT17_Y_OFFSET 0
+#endif
+#ifndef TT17_Z_OFFSET
+#define TT17_Z_OFFSET 0
+#endif
+#ifndef TT17_A_OFFSET
+#define TT17_A_OFFSET 0
+#endif
+#ifndef TT17_B_OFFSET
+#define TT17_B_OFFSET 0
+#endif
+#ifndef TT17_C_OFFSET
+#define TT17_C_OFFSET 0
+#endif
+
+#ifndef TT18_X_OFFSET
+#define TT18_X_OFFSET 0
+#endif
+#ifndef TT18_Y_OFFSET
+#define TT18_Y_OFFSET 0
+#endif
+#ifndef TT18_Z_OFFSET
+#define TT18_Z_OFFSET 0
+#endif
+#ifndef TT18_A_OFFSET
+#define TT18_A_OFFSET 0
+#endif
+#ifndef TT18_B_OFFSET
+#define TT18_B_OFFSET 0
+#endif
+#ifndef TT18_C_OFFSET
+#define TT18_C_OFFSET 0
+#endif
+
+#ifndef TT19_X_OFFSET
+#define TT19_X_OFFSET 0
+#endif
+#ifndef TT19_Y_OFFSET
+#define TT19_Y_OFFSET 0
+#endif
+#ifndef TT19_Z_OFFSET
+#define TT19_Z_OFFSET 0
+#endif
+#ifndef TT19_A_OFFSET
+#define TT19_A_OFFSET 0
+#endif
+#ifndef TT19_B_OFFSET
+#define TT19_B_OFFSET 0
+#endif
+#ifndef TT19_C_OFFSET
+#define TT19_C_OFFSET 0
+#endif
+
+#ifndef TT20_X_OFFSET
+#define TT20_X_OFFSET 0
+#endif
+#ifndef TT20_Y_OFFSET
+#define TT20_Y_OFFSET 0
+#endif
+#ifndef TT20_Z_OFFSET
+#define TT20_Z_OFFSET 0
+#endif
+#ifndef TT20_A_OFFSET
+#define TT20_A_OFFSET 0
+#endif
+#ifndef TT20_B_OFFSET
+#define TT20_B_OFFSET 0
+#endif
+#ifndef TT20_C_OFFSET
+#define TT20_C_OFFSET 0
+#endif
+
+#ifndef TT21_X_OFFSET
+#define TT21_X_OFFSET 0
+#endif
+#ifndef TT21_Y_OFFSET
+#define TT21_Y_OFFSET 0
+#endif
+#ifndef TT21_Z_OFFSET
+#define TT21_Z_OFFSET 0
+#endif
+#ifndef TT21_A_OFFSET
+#define TT21_A_OFFSET 0
+#endif
+#ifndef TT21_B_OFFSET
+#define TT21_B_OFFSET 0
+#endif
+#ifndef TT21_C_OFFSET
+#define TT21_C_OFFSET 0
+#endif
+
+#ifndef TT22_X_OFFSET
+#define TT22_X_OFFSET 0
+#endif
+#ifndef TT22_Y_OFFSET
+#define TT22_Y_OFFSET 0
+#endif
+#ifndef TT22_Z_OFFSET
+#define TT22_Z_OFFSET 0
+#endif
+#ifndef TT22_A_OFFSET
+#define TT22_A_OFFSET 0
+#endif
+#ifndef TT22_B_OFFSET
+#define TT22_B_OFFSET 0
+#endif
+#ifndef TT22_C_OFFSET
+#define TT22_C_OFFSET 0
+#endif
+
+#ifndef TT23_X_OFFSET
+#define TT23_X_OFFSET 0
+#endif
+#ifndef TT23_Y_OFFSET
+#define TT23_Y_OFFSET 0
+#endif
+#ifndef TT23_Z_OFFSET
+#define TT23_Z_OFFSET 0
+#endif
+#ifndef TT23_A_OFFSET
+#define TT23_A_OFFSET 0
+#endif
+#ifndef TT23_B_OFFSET
+#define TT23_B_OFFSET 0
+#endif
+#ifndef TT23_C_OFFSET
+#define TT23_C_OFFSET 0
+#endif
+
+#ifndef TT24_X_OFFSET
+#define TT24_X_OFFSET 0
+#endif
+#ifndef TT24_Y_OFFSET
+#define TT24_Y_OFFSET 0
+#endif
+#ifndef TT24_Z_OFFSET
+#define TT24_Z_OFFSET 0
+#endif
+#ifndef TT24_A_OFFSET
+#define TT24_A_OFFSET 0
+#endif
+#ifndef TT24_B_OFFSET
+#define TT24_B_OFFSET 0
+#endif
+#ifndef TT24_C_OFFSET
+#define TT24_C_OFFSET 0
+#endif
+
+#ifndef TT25_X_OFFSET
+#define TT25_X_OFFSET 0
+#endif
+#ifndef TT25_Y_OFFSET
+#define TT25_Y_OFFSET 0
+#endif
+#ifndef TT25_Z_OFFSET
+#define TT25_Z_OFFSET 0
+#endif
+#ifndef TT25_A_OFFSET
+#define TT25_A_OFFSET 0
+#endif
+#ifndef TT25_B_OFFSET
+#define TT25_B_OFFSET 0
+#endif
+#ifndef TT25_C_OFFSET
+#define TT25_C_OFFSET 0
+#endif
+
+#ifndef TT26_X_OFFSET
+#define TT26_X_OFFSET 0
+#endif
+#ifndef TT26_Y_OFFSET
+#define TT26_Y_OFFSET 0
+#endif
+#ifndef TT26_Z_OFFSET
+#define TT26_Z_OFFSET 0
+#endif
+#ifndef TT26_A_OFFSET
+#define TT26_A_OFFSET 0
+#endif
+#ifndef TT26_B_OFFSET
+#define TT26_B_OFFSET 0
+#endif
+#ifndef TT26_C_OFFSET
+#define TT26_C_OFFSET 0
+#endif
+
+#ifndef TT27_X_OFFSET
+#define TT27_X_OFFSET 0
+#endif
+#ifndef TT27_Y_OFFSET
+#define TT27_Y_OFFSET 0
+#endif
+#ifndef TT27_Z_OFFSET
+#define TT27_Z_OFFSET 0
+#endif
+#ifndef TT27_A_OFFSET
+#define TT27_A_OFFSET 0
+#endif
+#ifndef TT27_B_OFFSET
+#define TT27_B_OFFSET 0
+#endif
+#ifndef TT27_C_OFFSET
+#define TT27_C_OFFSET 0
+#endif
+
+#ifndef TT28_X_OFFSET
+#define TT28_X_OFFSET 0
+#endif
+#ifndef TT28_Y_OFFSET
+#define TT28_Y_OFFSET 0
+#endif
+#ifndef TT28_Z_OFFSET
+#define TT28_Z_OFFSET 0
+#endif
+#ifndef TT28_A_OFFSET
+#define TT28_A_OFFSET 0
+#endif
+#ifndef TT28_B_OFFSET
+#define TT28_B_OFFSET 0
+#endif
+#ifndef TT28_C_OFFSET
+#define TT28_C_OFFSET 0
+#endif
+
+#ifndef TT29_X_OFFSET
+#define TT29_X_OFFSET 0
+#endif
+#ifndef TT29_Y_OFFSET
+#define TT29_Y_OFFSET 0
+#endif
+#ifndef TT29_Z_OFFSET
+#define TT29_Z_OFFSET 0
+#endif
+#ifndef TT29_A_OFFSET
+#define TT29_A_OFFSET 0
+#endif
+#ifndef TT29_B_OFFSET
+#define TT29_B_OFFSET 0
+#endif
+#ifndef TT29_C_OFFSET
+#define TT29_C_OFFSET 0
+#endif
+
+#ifndef TT30_X_OFFSET
+#define TT30_X_OFFSET 0
+#endif
+#ifndef TT30_Y_OFFSET
+#define TT30_Y_OFFSET 0
+#endif
+#ifndef TT30_Z_OFFSET
+#define TT30_Z_OFFSET 0
+#endif
+#ifndef TT30_A_OFFSET
+#define TT30_A_OFFSET 0
+#endif
+#ifndef TT30_B_OFFSET
+#define TT30_B_OFFSET 0
+#endif
+#ifndef TT30_C_OFFSET
+#define TT30_C_OFFSET 0
+#endif
+
+#ifndef TT31_X_OFFSET
+#define TT31_X_OFFSET 0
+#endif
+#ifndef TT31_Y_OFFSET
+#define TT31_Y_OFFSET 0
+#endif
+#ifndef TT31_Z_OFFSET
+#define TT31_Z_OFFSET 0
+#endif
+#ifndef TT31_A_OFFSET
+#define TT31_A_OFFSET 0
+#endif
+#ifndef TT31_B_OFFSET
+#define TT31_B_OFFSET 0
+#endif
+#ifndef TT31_C_OFFSET
+#define TT31_C_OFFSET 0
+#endif
+
+#ifndef TT32_X_OFFSET
+#define TT32_X_OFFSET 0
+#endif
+#ifndef TT32_Y_OFFSET
+#define TT32_Y_OFFSET 0
+#endif
+#ifndef TT32_Z_OFFSET
+#define TT32_Z_OFFSET 0
+#endif
+#ifndef TT32_A_OFFSET
+#define TT32_A_OFFSET 0
+#endif
+#ifndef TT32_B_OFFSET
+#define TT32_B_OFFSET 0
+#endif
+#ifndef TT32_C_OFFSET
+#define TT32_C_OFFSET 0
 #endif
 
 // *** User-Defined Data Defaults *** //

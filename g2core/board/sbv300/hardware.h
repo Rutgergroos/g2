@@ -55,15 +55,15 @@ enum hwPlatform {
 // Axes, motors & PWM channels must be defines (not enums) so expressions like this:
 //  #if (MOTORS >= 6)  will work
 
-#define AXES 6         // number of axes supported in this version
-#define HOMING_AXES 4  // number of axes that can be homed (assumes Zxyabc sequence)
-#define MOTORS 4       // number of motors on the board
-#define COORDS 6       // number of supported coordinate systems (1-6)
-#define PWMS 2         // number of supported PWM channels
-
+#define AXES 6          // number of axes supported in this version
+#define HOMING_AXES 4   // number of axes that can be homed (assumes Zxyabc sequence)
+#define MOTORS 4        // number of motors on the board
+#define COORDS 6        // number of supported coordinate systems (index starts at 1)
+#define PWMS 2          // number of supported PWM channels
+#define TOOLS 32        // number of entries in tool table (index starts at 1)
 
 ////////////////////////////
-/////// ARM VERSION ////////
+/////// ARM SETTINGS ///////
 ////////////////////////////
 
 #include "MotatePins.h"
@@ -82,11 +82,9 @@ using Motate::OutputPin;
  * Global System Defines *
  *************************/
 
-#undef F_CPU							// CPU clock - set for delays
-#define F_CPU 84000000UL
 #define MILLISECONDS_PER_TICK 1			// MS for system tick (systick * N)
 #define SYS_ID_DIGITS 12                // actual digits in system ID (up to 16)
-#define SYS_ID_LEN 16					// total length including dashes and NUL
+#define SYS_ID_LEN 24					// total length including dashes and NUL
 
 /************************************************************************************
  **** ARM SAM3X8E SPECIFIC HARDWARE *************************************************
@@ -128,10 +126,8 @@ using Motate::OutputPin;
 
 // Timer definitions. See stepper.h and other headers for setup
 typedef TimerChannel<3,0> dda_timer_type;	// stepper pulse generation in stepper.cpp
-typedef TimerChannel<4,0> dwell_timer_type;	// dwell timing in stepper.cpp
-typedef ServiceCall<0> load_timer_type;	// request load timer in stepper.cpp
-typedef ServiceCall<1> exec_timer_type;	// request exec timer in stepper.cpp
-typedef ServiceCall<2> fwd_plan_timer_type;	// request exec timer in stepper.cpp
+typedef TimerChannel<4,0> exec_timer_type;	// request exec timer in stepper.cpp
+typedef TimerChannel<5,0> fwd_plan_timer_type;	// request exec timer in stepper.cpp
 
 // Pin assignments
 

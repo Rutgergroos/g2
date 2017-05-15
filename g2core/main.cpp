@@ -49,7 +49,6 @@
 /******************** System Globals *************************/
 
 stat_t status_code;						    // allocate a variable for the ritorno macro
-char global_string_buf[GLOBAL_STRING_LEN];	// allocate a string for global message use
 
 /************* System Globals For Diagnostics ****************/
 
@@ -152,3 +151,12 @@ void loop() {
         controller_run( );			// single pass through the controller
     }
 }
+
+/*
+ * Traps for debugging. These must be in main.cpp for proper linker ordering
+ */
+
+void MemManage_Handler  ( void ) { __asm__("BKPT"); }
+void BusFault_Handler   ( void ) { __asm__("BKPT"); }
+void UsageFault_Handler ( void ) { __asm__("BKPT"); }
+void HardFault_Handler  ( void ) { __asm__("BKPT"); }
